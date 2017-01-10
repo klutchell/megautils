@@ -7,13 +7,15 @@ if [ "$(id -u)" != "0" ]; then
 	exit 1
 fi
 
+echo "creating directories..."
 for dir in "${local_dir}" "${unionfs_mnt}" "${megafuse_mnt}"; do
-	mkdir -p "${dir}" >/dev/null || true
+	mkdir -p "${dir}" 2>/dev/null || true
 	chown "${ownerid}":"${groupid}" "${dir}"
 done
 
 sed -i 's|#user_allow_other|user_allow_other|' /etc/fuse.conf
 
+echo "writing megafuse config..."
 cat << EOF > "${megafuse_cfg}"
 USERNAME = ${megafuse_user}
 PASSWORD = ${megafuse_pass}
@@ -21,6 +23,7 @@ MOUNTPOINT = ${megafuse_mnt}
 CACHEPATH = ${megafuse_cache}
 EOF
 
+echo "writing megafuse service..."
 cat << EOF > "/etc/systemd/system/megafuse.service"
 [Unit]
 Description=Mount your MEGA cloud storage with fuse
