@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+. "$(dirname $0)/megautils.conf"
+
+if [ "$(id -u)" != "0" ]; then
+	echo "This script must be run as root" 1>&2
+	exit 1
+fi
+
+if ! mountpoint -q "${remote_dir}"; then
+	echo "remote filesystem is not mounted."; exit 1
+fi
+
+if [ ! -d "${snapshot_dir}" ]; then
+	echo "snapshot not found"; exit 1
+fi
+
+mkdir "${remote_dir}/snapshots" 2>/dev/null || true
+
+pushd "${snapshot_dir}" >/dev/null
+
+echo "compressing snapshot..."
+tar -czf "${remote_dir}/snapshots/$(hostname)_$(date -r "${snapshot_dir}" +%Y.%m.%d_%H.%M.%S).tar.gz" *
+
+popd >/dev/null
+
+ls -t "${remote_dir}/snapshots/$(hostname)_"* | sed -e '1,3d' | xargs -d '\n' rm -v
+

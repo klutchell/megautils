@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+. "$(dirname $0)/megautils.conf"
+
+if [ "$(id -u)" != "0" ]; then
+	echo "This script must be run as root" 1>&2
+	exit 1
+fi
+
+for dir in "${local_dir}" "${ufs_dir}" "${remote_dir}"; do
+	mkdir -p "${dir}" >/dev/null || true
+	chown "${ownerid}":"${groupid}" "${dir}"
+done
+
+sed -i 's|#user_allow_other|user_allow_other|' /etc/fuse.conf
+
+cat << EOF > "${mf_cfg}"
+USERNAME = ${mf_user}
+PASSWORD = ${mf_pass}
+MOUNTPOINT = ${remote_dir}
+CACHEPATH = ${mf_cache}
+EOF
+
+cat << EOF > "/etc/systemd/system/megafuse.service"
+[Unit]
+Description=Mount your MEGA cloud storage with fuse
+After=network.target
+
+[Service]
+User=kyle
+ExecStart="${mf_bin}" -c "${mf_cfg}" -f -o allow_other -o uid="${ownerid}" -o gid="${groupid}"
+Restart=always
+
+[Install]
+WantedBy=default.target
+EOF
+
+systemctl enable megafuse
+
+exit 0

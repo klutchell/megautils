@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+. "$(dirname $0)/megautils.conf"
+
+if [ "$(id -u)" != "0" ]; then
+	echo "This script must be run as root" 1>&2
+	exit 1
+fi
+
+if [ ! -x "${mf_bin}" ]; then 
+	apt-get install -y \
+	libcrypto++-dev \
+	libcurl4-openssl-dev \
+	libdb++-dev \
+	libfreeimage-dev \
+	libreadline-dev \
+	libfuse-dev \
+	make \
+	g++ \
+	pkg-config \
+	gettext
+	
+	git clone https://github.com/matteoserva/MegaFuse.git "$(dirname "${mf_bin}")"
+	pushd "$(dirname "${mf_bin}")"
+	make || { popd; exit 1; }
+	popd
+fi
+
+if [ ! -x "${ufs_bin}" ]; then 
+	apt-get install -y \
+	unionfs-fuse
+fi
+
+"$(dirname $0)/configure"
+
+exit 0
