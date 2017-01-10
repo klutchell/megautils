@@ -7,7 +7,7 @@ if [ "$(id -u)" != "0" ]; then
 	exit 1
 fi
 
-if ! mountpoint -q "${remote_dir}"; then
+if ! mountpoint -q "${megafuse_mnt}"; then
 	echo "remote filesystem is not mounted."; exit 1
 fi
 
@@ -15,14 +15,14 @@ if [ ! -d "${snapshot_dir}" ]; then
 	echo "snapshot not found"; exit 1
 fi
 
-mkdir "${remote_dir}/snapshots" 2>/dev/null || true
+mkdir "${megafuse_mnt}/snapshots" 2>/dev/null || true
 
 pushd "${snapshot_dir}" >/dev/null
 
 echo "compressing snapshot..."
-tar -czf "${remote_dir}/snapshots/$(hostname)_$(date -r "${snapshot_dir}" +%Y.%m.%d_%H.%M.%S).tar.gz" *
+tar -czf "${megafuse_mnt}/snapshots/$(hostname)_$(date -r "${snapshot_dir}" +%Y.%m.%d_%H.%M.%S).tar.gz" *
 
 popd >/dev/null
 
-ls -t "${remote_dir}/snapshots/$(hostname)_"* | sed -e '1,3d' | xargs -d '\n' rm -v
+ls -t "${megafuse_mnt}/snapshots/$(hostname)_"* | sed -e '1,3d' | xargs -d '\n' rm -v
 

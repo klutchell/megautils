@@ -2,14 +2,14 @@
 
 . "$(dirname $0)/megautils.conf"
 
-if mountpoint -q "${ufs_dir}"; then
+if mountpoint -q "${unionfs_mnt}"; then
 	echo "union filesystem already mounted. remounting now..."
-	fusermount -uz "${ufs_dir}"
+	fusermount -uz "${unionfs_mnt}"
 else
 	echo "mounting union filesystem..."
 fi
 
-"${ufs_bin}" -o cow -o allow_other -o uid="${ownerid}" -o gid="${groupid}" "${local_dir}=RW:${mf_base}=RO" "${ufs_dir}"
+"${unionfs_bin}" -o cow -o allow_other -o uid="${ownerid}" -o gid="${groupid}" "${local_dir}=RW:${megafuse_base}=RO" "${unionfs_mnt}"
 if [ $? ]; then
 	echo "union filesystem mounted successfully."
 else
